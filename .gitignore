@@ -1,0 +1,63 @@
+# Compiled object files
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executable files
+*.exe
+*.out
+*.elf
+*.bin
+
+# ESP-IDF build output
+/build/
+*.map
+*.bin
+*.elf
+*.hex
+
+# Arduino build output
+*.cpp.bin
+*.cpp.elf
+*.cpp.hex
+
+# ESP32 partition tables
+partition_table*.csv
+
+# Core dumps
+core.*
+*.core
+
+# Python virtual environments
+venv/
+.env/
+__pycache__/
+*.pyc
+
+# VSCode settings
+.vscode/
+
+# CLion/JetBrains IDEs
+.idea/
+cmake-build-*/
+
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+.pio-test/
+.pio-build/
+
+# Logs
+*.log
+
+# Misc
+.DS_Store
+Thumbs.db
