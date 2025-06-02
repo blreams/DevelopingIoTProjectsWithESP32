@@ -13,5 +13,10 @@ void AppLed::init() {
 }
 
 void AppLed::set(bool val) {
-    gpio_set_level(pin_, static_cast<uint32_t>(val));
+    state_ = val;
+    gpio_set_level(pin_, static_cast<uint32_t>(state_));
+}
+
+bool AppLed::get() {
+    return state_;
 }

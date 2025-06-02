@@ -14,5 +14,15 @@ extern "C" void app_main() {
     led.init();
     button.init();
     ESP_LOGI("main", "initialized");
+    bool ledState = led.get();
+    bool curr_state = false;
+    while (true) {
+        curr_state = led.get();
+        if (curr_state != ledState) {
+            ledState = curr_state;
+            ESP_LOGI("main", "LED state: %s", ledState ? "ON" : "OFF");
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
     vTaskSuspend(nullptr);
 }
