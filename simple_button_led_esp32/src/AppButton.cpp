@@ -1,21 +1,14 @@
 #include "AppButton.hpp"
 
 namespace {
-    void IRAM_ATTR gpio_isr_handler(void* arg) {
-        auto* btn = static_cast<AppButton*>(arg);
-        btn->handleInterrupt();
-    }
+    void gpio_isr_handler(void* arg);
 }
 
-AppButton::AppButton(gpio_num_t pin) :
-    pin_(pin),
-    toggled_state_(false),
-    last_isr_time_(0)
-{}
+AppButton::AppButton(std::function<void(bool)> h) : state(false), pressedHandler(h) {};
 
 void AppButton::init() {
     gpio_config_t config = {};
-    config.pin_bit_mask = (1ULL << pin_);
+    config.pin_bit_mask = (1ULL << GPIO_NUM_33);
     config.mode = GPIO_MODE_INPUT;
     config.pull_up_en = GPIO_PULLUP_ENABLE;
     config.pull_down_en = GPIO_PULLDOWN_DISABLE;
@@ -23,17 +16,22 @@ void AppButton::init() {
     gpio_config(&config);
 
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(pin_, gpio_isr_handler, this);
+    gpio_isr_handler_add(GPIO_NUM_33, gpio_isr_handler, this);
 }
 
-void AppButton::handleInterrupt() {
-    TickType_t now = xTaskGetTickCountFromISR();
-    if ((now - last_isr_time_) > pdMS_TO_TICKS(50)) {  // 50 ms debounce}
-        toggled_state_ = !toggled_state_;
-        last_isr_time_ = now;
+void AppButton::toggle() {
+    state = !state;
+    pressedHandler(state);
+}
+
+namespace {
+    void IRAM_ATTR gpio_isr_handler(void* arg) {
+        static volatile TickType_t next = 0;
+        TickType_t now = xTaskGetTickCountFromISR();
+        if (now > next) {
+            auto btn = reinterpret_cast<AppButton *>(arg);
+            btn->toggle();
+            next = now + 500 / portTICK_PERIOD_MS;
+        }
     }
-}
-
-bool AppButton::getState() const {
-    return toggled_state_;
 }
