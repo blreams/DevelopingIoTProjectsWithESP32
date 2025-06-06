@@ -4,37 +4,36 @@
 #include "driver/i2c.h"
 #include "esp_log.h"
 
-#include "AppMultisensor.h"
+#include "AppLed.hpp"
+#include "AppI2c.hpp"
+#include "AppBme280.hpp"
 
-#define I2C_MASTER_NUM I2C_NUM_0
-#define I2C_MASTER_SDA_IO 21
-#define I2C_MASTER_SCL_IO 22
-#define I2C_MASTER_FREQ_HZ 100000
-#define I2C_MASTER_TX_BUF_DISABLE 0
-#define I2C_MASTER_RX_BUF_DISABLE 0
+#define BME280_ADDRESS 0x77
 
-app::AppMultisensor multisensor;
+AppLed led(GPIO_NUM_27);
+AppI2c i2c(GPIO_NUM_22, GPIO_NUM_21);
+AppBme280 bme280(BME280_ADDRESS, &i2c);
 
 extern "C"
 {
     void vBlinkTask(void* pvParameters) {
-        gpio_set_direction(GPIO_NUM_27, GPIO_MODE_OUTPUT);
         while (true) {
-            gpio_set_level(GPIO_NUM_27, 1);
-            vTaskDelay(pdMS_TO_TICKS(500));
-            gpio_set_level(GPIO_NUM_27, 0);
-            vTaskDelay(pdMS_TO_TICKS(500));
+            led.set(!led.get());
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     };
 
     void vGetTempTask(void* pvParameters) {
-        static const char* TAG = "BME280";
-        // Initialize I2C and BME280 here (pseudo-code)
-        app::SensorReading reading;
+        static const char* TAG = "TTASK";
+        SensorReading reading;
         while (true) {
-            reading = multisensor.read();
+            reading = bme280.read();
             if (reading.success) {
-                ESP_LOGI(TAG, "Temperature: %.2f C", reading.temperature);
+                ESP_LOGI(TAG, "Temperature: %.2f C, Pressure: %.2f, Humidity: %.2f",
+                    reading.temperature,
+                    reading.pressure,
+                    reading.humidity
+                );
             } else {
                 ESP_LOGW(TAG, "Unable to read temp.");
             }
@@ -46,10 +45,21 @@ extern "C"
         static const char* TAG = "MAIN";
         ESP_LOGD(TAG, "Hello World!");
 
-        if (multisensor.init()) {
-            ESP_LOGD(TAG, "Multisensor initialized.");
+        led.init();
+        i2c.init();
+        i2c.scan_i2c_bus();
+        if (i2c.initialized) {
+            ESP_LOGD(TAG, "I2C initialized.");
+            bme280.init();
         } else {
-            ESP_LOGE(TAG, "Multisensor NOT initialized.");
+            ESP_LOGE(TAG, "I2C NOT initialized.");
+        }
+
+        if (bme280.initialized) {
+            ESP_LOGD(TAG, "BME280 initialized.");
+        } else {
+            ESP_LOGE(TAG, "BME280 NOT initialized.");
+            vTaskSuspend(nullptr);
         }
 
         // Create a task to blink the LED
