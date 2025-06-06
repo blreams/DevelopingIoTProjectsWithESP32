@@ -29,7 +29,7 @@ extern "C"
         while (true) {
             reading = bme280.read();
             if (reading.success) {
-                ESP_LOGI(TAG, "Temperature: %.2f C, Pressure: %.2f, Humidity: %.2f",
+                ESP_LOGI(TAG, "Temperature: %.2f F, Pressure: %.2f inHg, Humidity: %.2f %%",
                     reading.temperature,
                     reading.pressure,
                     reading.humidity

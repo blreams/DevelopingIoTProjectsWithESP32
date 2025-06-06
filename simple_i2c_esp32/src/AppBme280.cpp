@@ -3,6 +3,9 @@
 
 AppBme280::AppBme280(uint8_t address, AppI2c* i2c) : address_(address), i2c_(i2c) {};
 
+float c_to_f(float ctemp) { return ((ctemp * (9.0 / 5.0)) + 32.0); }
+float p_to_i(float ppres) { return (ppres * 0.0002952998751); }
+
 void AppBme280::init() {
     initialized = false;
     //static uint8_t addr = 0x77;
@@ -41,6 +44,7 @@ void AppBme280::init() {
     initialized = true;
 }
 
+
 SensorReading AppBme280::read() {
     bme280_data comp_data;
     int8_t rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev_);
@@ -52,8 +56,8 @@ SensorReading AppBme280::read() {
         return reading;
     }
 
-    reading.temperature = comp_data.temperature;
-    reading.pressure = comp_data.pressure;
+    reading.temperature = c_to_f(comp_data.temperature);
+    reading.pressure = p_to_i(comp_data.pressure);
     reading.humidity = comp_data.humidity;
     reading.success = true;
     return reading;
