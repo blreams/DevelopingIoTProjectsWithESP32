@@ -6,7 +6,7 @@ AppBme280::AppBme280(uint8_t address, AppI2c* i2c) : address_(address), i2c_(i2c
 float c_to_f(float ctemp) { return ((ctemp * (9.0 / 5.0)) + 32.0); }
 float p_to_i(float ppres) { return (ppres * 0.0002952998751); }
 
-void AppBme280::init() {
+esp_err_t AppBme280::init() {
     initialized = false;
     //static uint8_t addr = 0x77;
     dev_.intf = BME280_I2C_INTF;
@@ -18,7 +18,7 @@ void AppBme280::init() {
     int8_t rslt = bme280_init(&dev_);
     if (rslt != BME280_OK) {
         ESP_LOGE(BTAG, "Failed bme280_init (%d)", rslt);
-        return;
+        return ESP_FAIL;
     }
 
     bme280_settings settings;
@@ -31,17 +31,18 @@ void AppBme280::init() {
     rslt = bme280_set_sensor_settings(BME280_SEL_ALL_SETTINGS, &settings, &dev_);
     if (rslt != BME280_OK) {
         ESP_LOGE(BTAG, "Failed bme280_set_sensor_settings (%d)", rslt);
-        return;
+        return ESP_FAIL;
     }
 
     rslt = bme280_set_sensor_mode(BME280_POWERMODE_NORMAL, &dev_);
     if (rslt != BME280_OK) {
         ESP_LOGE(BTAG, "Failed bme280_set_sensor_mode (%d)", rslt);
-        return;
+        return ESP_FAIL;
     }
 
     ESP_LOGI(BTAG, "begin() was successful.");
     initialized = true;
+    return ESP_OK;
 }
 
 

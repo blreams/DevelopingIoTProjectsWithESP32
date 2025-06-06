@@ -12,7 +12,7 @@
 class AppI2c {
 public:
     explicit AppI2c(gpio_num_t scl, gpio_num_t sda);
-    void init();
+    esp_err_t init();
     bool initialized;
     static int8_t user_i2c_read(uint8_t reg_addr, uint8_t* data, uint32_t len, void* intf_ptr);
     static int8_t user_i2c_write(uint8_t reg_addr, const uint8_t* data, uint32_t len, void* intf_ptr);

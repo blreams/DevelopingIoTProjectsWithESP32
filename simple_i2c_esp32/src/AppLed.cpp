@@ -2,7 +2,7 @@
 
 AppLed::AppLed(gpio_num_t pin) : pin_(pin) {}
 
-void AppLed::init() {
+esp_err_t AppLed::init() {
     gpio_config_t config = {};
     config.pin_bit_mask = (1ULL << pin_);
     config.mode = GPIO_MODE_OUTPUT;
@@ -10,6 +10,7 @@ void AppLed::init() {
     config.pull_down_en = GPIO_PULLDOWN_DISABLE;
     config.intr_type = GPIO_INTR_DISABLE;
     gpio_config(&config);
+    return ESP_OK;
 }
 
 void AppLed::set(bool val) {

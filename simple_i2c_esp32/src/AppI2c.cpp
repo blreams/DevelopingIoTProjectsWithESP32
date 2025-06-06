@@ -4,7 +4,7 @@
 
 AppI2c::AppI2c(gpio_num_t scl, gpio_num_t sda) : scl_(scl), sda_(sda) {}
 
-void AppI2c::init() {
+esp_err_t AppI2c::init() {
     char IITAG[] = "I2C_INIT";
     ESP_LOGD(IITAG, "SCL GPIO = (%d)", scl_);
     ESP_LOGD(IITAG, "SDA GPIO = (%d)", sda_);
@@ -17,17 +17,18 @@ void AppI2c::init() {
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
 
-    if (i2c_param_config(I2C_MASTER_NUM, &conf) == ESP_OK) {
-        if (i2c_driver_install(
-            I2C_MASTER_NUM,
-            conf.mode,
-            I2C_MASTER_RX_BUF_DISABLE,
-            I2C_MASTER_TX_BUF_DISABLE,
-            0
-        ) == ESP_OK) {
-            initialized = true;
-        }
-    }
+    ESP_ERROR_CHECK(i2c_param_config(I2C_MASTER_NUM, &conf));
+    ESP_ERROR_CHECK(
+        i2c_driver_install(
+        I2C_MASTER_NUM,
+        conf.mode,
+        I2C_MASTER_RX_BUF_DISABLE,
+        I2C_MASTER_TX_BUF_DISABLE,
+        0
+        )
+    );
+    initialized = true;
+    return ESP_OK;
 }
 
 int8_t AppI2c::user_i2c_read(

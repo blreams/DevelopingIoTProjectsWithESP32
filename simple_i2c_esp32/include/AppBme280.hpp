@@ -16,7 +16,7 @@ struct SensorReading {
 class AppBme280 {
 public:
     explicit AppBme280(uint8_t address, AppI2c* i2c);
-    void init();
+    esp_err_t init();
     bool initialized;
     SensorReading read();
 private:

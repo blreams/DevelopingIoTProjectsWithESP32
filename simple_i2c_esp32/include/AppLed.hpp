@@ -5,7 +5,7 @@
 class AppLed {
 public:
     explicit AppLed(gpio_num_t pin);
-    void init();
+    esp_err_t init();
     void set(bool val);
     bool get();
 private:

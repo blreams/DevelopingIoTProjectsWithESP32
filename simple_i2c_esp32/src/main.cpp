@@ -10,7 +10,7 @@
 
 #define BME280_ADDRESS 0x77
 
-AppLed led(GPIO_NUM_27);
+AppLed led(GPIO_NUM_2);
 AppI2c i2c(GPIO_NUM_22, GPIO_NUM_21);
 AppBme280 bme280(BME280_ADDRESS, &i2c);
 
@@ -45,27 +45,19 @@ extern "C"
         static const char* TAG = "MAIN";
         ESP_LOGD(TAG, "Hello World!");
 
-        led.init();
-        i2c.init();
+        ESP_ERROR_CHECK(led.init());
+        ESP_ERROR_CHECK(i2c.init());
+        ESP_LOGD(TAG, "I2C initialized.");
         i2c.scan_i2c_bus();
-        if (i2c.initialized) {
-            ESP_LOGD(TAG, "I2C initialized.");
-            bme280.init();
-        } else {
-            ESP_LOGE(TAG, "I2C NOT initialized.");
-        }
-
-        if (bme280.initialized) {
-            ESP_LOGD(TAG, "BME280 initialized.");
-        } else {
-            ESP_LOGE(TAG, "BME280 NOT initialized.");
-            vTaskSuspend(nullptr);
-        }
+        ESP_ERROR_CHECK(bme280.init());
 
         // Create a task to blink the LED
         xTaskCreate(vBlinkTask, "blink_task", 4096, nullptr, 5, nullptr);
 
         // Create a task to read BME280 temperature and log it
         xTaskCreate(vGetTempTask, "bme280_task", 4096, nullptr, 5, nullptr);
+
+        // Suspend the main task now that other tasks are created.
+        vTaskSuspend(nullptr);
     }
 }
