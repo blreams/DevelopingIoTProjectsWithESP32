@@ -1,0 +1,41 @@
+Folder PATH listing for volume D_DRIVE
+Volume serial number is 7A12-F673
+D:.
+¦   CMakeLists.txt
+¦   folder_structure.txt
+¦   partitions_example.csv
+¦   pytest_examples_i2c_tools.py
+¦   README.md
+¦   sdkconfig
+¦   sdkconfig.defaults
+¦   sdkconfig.old
+¦   
++---.devcontainer
+¦   ¦   devcontainer.json
+¦   ¦   Dockerfile
+¦   ¦   
+¦   +---components
+¦       +---AppGpio
+¦       ¦   ¦   AppGpioOut.cpp
+¦       ¦   ¦   CMakeLists.txt
+¦       ¦   ¦   
+¦       ¦   +---include
+¦       ¦           AppGpioOut.hpp
+¦       ¦           
+¦       +---AppI2cMaster
+¦           ¦   AppI2cMaster.cpp
+¦           ¦   CMakeLists.txt
+¦           ¦   
+¦           +---include
+¦                   AppI2cMaster.hpp
+¦                   
++---.vscode
+¦       c_cpp_properties.json
+¦       launch.json
+¦       settings.json
+¦       
++---build
++---main
+        CMakeLists.txt
+        main.cpp
+        
