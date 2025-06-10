@@ -4,9 +4,18 @@
 #include "esp_log.h"
 
 
-AppI2cMaster::AppI2cMaster(gpio_num_t scl, gpio_num_t sda) : scl_(scl), sda_(sda) {};
+AppI2cMaster::AppI2cMaster(gpio_num_t scl, gpio_num_t sda, gpio_num_t trigger_gpio) : 
+    scl_(scl), 
+    sda_(sda),
+    trigger_gpio_(trigger_gpio),
+    trigger_(trigger_gpio_)
+{};
 
 esp_err_t AppI2cMaster::init() {
+    // Configure trigger gpio
+    trigger_.init();
+    trigger_.set(false);
+
     // Configure I2C master bus
     i2c_master_bus_config_t bus_config = {
         .i2c_port = I2C_PORT,
@@ -73,14 +82,33 @@ DeviceInfo AppI2cMaster::get_device_by_name(const std::string& name) {
     }
 }
 
-esp_err_t AppI2cMaster::read_bytes(const std::string name, uint8_t reg, uint8_t len, uint8_t* buffer) {
+esp_err_t AppI2cMaster::read_bytes(const std::string name, uint8_t reg, uint8_t len, std::vector<uint8_t>& buffer) {
     static const char* tag = "read_bytes";
     DeviceInfo dev = get_device_by_name(name);
     //ESP_LOGD(tag, "dev.address=0x%02x", dev.address);
-    ESP_ERROR_CHECK(i2c_master_transmit_receive(dev.handle, &reg, 1, buffer, len, -1));
     uint8_t bits_transferred = ((3 + len) * 9);  // write address, register, read address, len, 9 scl per byte
     uint32_t delay = static_cast<uint32_t>(dev.scl_period * bits_transferred) + dev.read_latency;
-    //ESP_LOGD(tag, "Delaying for %lu us", delay);
+    trigger_.set(true);
+    ESP_ERROR_CHECK(i2c_master_transmit_receive(dev.handle, &reg, 1, buffer.data(), len, -1));
+    ESP_LOGD(tag, "Delaying for %lu us", delay);
     ets_delay_us(delay);
+    trigger_.set(false);
+    return ESP_OK;
+}
+
+esp_err_t AppI2cMaster::write_byte(const std::string name, uint8_t reg, uint8_t write_data) {
+    static const char* tag = "write_bytes";
+    DeviceInfo dev = get_device_by_name(name);
+    std::vector<uint8_t> buffer = {reg, write_data};
+    trigger_.set(true);
+    ESP_ERROR_CHECK(i2c_master_transmit(dev.handle, buffer.data(), buffer.size(), -1));
+    trigger_.set(false);
+    return ESP_OK;
+}
+
+esp_err_t AppI2cMaster::write_bytes(const std::string name, uint8_t reg, uint8_t len, std::vector<uint8_t>& buffer) {
+    // TODO
+    static const char* tag = "write_bytes";
+    DeviceInfo dev = get_device_by_name(name);
     return ESP_OK;
 }
