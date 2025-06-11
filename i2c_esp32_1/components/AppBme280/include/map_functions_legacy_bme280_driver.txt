@@ -1,0 +1,37 @@
+put_device_to_sleep
+  Call: bme280_get_regs, parse_device_settings, bme280_soft_reset, reload_device_settings
+  From: bme280_set_sensor_settings, bme280_set_sensor_mode
+
+write_power_mode
+null_ptr_check
+interleave_reg_addr
+get_calib_data
+parse_temp_press_calib_data
+parse_humidity_calib_data
+are_settings_changed
+set_osr_humidity_settings
+set_osr_settings
+set_osr_press_temp_settings
+fill_osr_press_settings
+fill_osr_temp_settings
+set_filter_standby_settings
+fill_filter_settings
+fill_standby_settings
+parse_device_settings
+parse_sensor_data
+reload_device_settings
+compensate_pressure
+compensate_humidity
+compensate_temperature
+
+bme280_init
+bme280_get_regs
+bme280_set_regs
+bme280_set_sensor_settings
+bme280_get_sensor_settings
+bme280_set_sensor_mode
+bme280_get_sensor_mode
+bme280_soft_reset
+bme280_get_sensor_data
+bme280_compensate_data
+bme280_cal_meas_delay

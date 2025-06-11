@@ -35,3 +35,8 @@ typedef int bme_err_t;
 #define BME280_REG_CTRL_MEAS                   0xf4
 #define BME280_REG_CONFIG                      0xf5
 #define BME280_REG_DATA                        0xf7
+
+// size constants
+#define BME280_LEN_TEMP_PRESS_CALIB_DATA       UINT8_C(26)
+#define BME280_LEN_HUMIDITY_CALIB_DATA         UINT8_C(7)
+#define BME280_LEN_P_T_H_DATA                  UINT8_C(8)
