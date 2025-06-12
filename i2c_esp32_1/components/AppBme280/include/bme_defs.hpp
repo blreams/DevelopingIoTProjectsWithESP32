@@ -40,3 +40,22 @@ typedef int bme_err_t;
 #define BME280_LEN_TEMP_PRESS_CALIB_DATA       UINT8_C(26)
 #define BME280_LEN_HUMIDITY_CALIB_DATA         UINT8_C(7)
 #define BME280_LEN_P_T_H_DATA                  UINT8_C(8)
+
+struct bme280_data {
+    double pressure;
+    double temperature;
+    double humidity;
+};
+
+struct bme280_settings {
+    uint8_t osr_p;
+    uint8_t osr_t;
+    uint8_t osr_h;
+    uint8_t filter;
+    uint8_t standby_time;
+};
+
+struct bme280_dev {
+    uint8_t chip_id;
+    struct bme280_calib_data calib_data;
+};
