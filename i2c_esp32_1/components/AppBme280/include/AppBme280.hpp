@@ -10,34 +10,6 @@
 #include "bme_defs.hpp"
 #include "AppGpioOut.hpp"
 
-struct bme280_calibration_data_t {
-    uint16_t dig_t1 = 0;
-    int16_t dig_t2 = 0;
-    int16_t dig_t3 = 0;
-    uint16_t dig_p1 = 0;
-    int16_t dig_p2 = 0;
-    int16_t dig_p3 = 0;
-    int16_t dig_p4 = 0;
-    int16_t dig_p5 = 0;
-    int16_t dig_p6 = 0;
-    int16_t dig_p7 = 0;
-    int16_t dig_p8 = 0;
-    int16_t dig_p9 = 0;
-    uint8_t dig_h1 = 0;
-    int16_t dig_h2 = 0;
-    uint8_t dig_h3 = 0;
-    int16_t dig_h4 = 0;
-    int16_t dig_h5 = 0;
-    int8_t dig_h6 = 0;
-    int32_t t_fine = 0;
-};
-
-struct bme280_dev_t {
-    uint8_t chip_id = 0;
-    int8_t intf_rslt = 0;
-    struct bme280_calibration_data_t calibration_data;
-};
-
 class AppBme280 {
 public:
     explicit AppBme280(
@@ -88,6 +60,7 @@ public:
     bme_err_t get_calib_data();
     void parse_temp_press_calib_data();
     void parse_humidity_calib_data();
+    bme_err_t write_power_mode(uint8_t sensor_mode);
 
 private:
     uint8_t address_;
@@ -97,7 +70,7 @@ private:
     i2c_master_dev_handle_t sensor_handle_;
     std::vector<uint8_t> data_;
     float scl_period_;
-    bme280_calibration_data_t calib_data_;
+    bme280_calibration_data_t calib_data_;  // TODO
 
     esp_err_t i2c_add_device(uint8_t address, uint32_t scl_hz);
     uint16_t concat_bytes(uint8_t b1, uint8_t b0);
