@@ -57,10 +57,10 @@ public:
     bme_err_t write_reg(const uint8_t reg_addr, const std::vector<uint8_t>& write_data);
 
     bme_err_t soft_reset();
-    bme_err_t get_calib_data();
-    void parse_temp_press_calib_data();
-    void parse_humidity_calib_data();
-    bme_err_t write_power_mode(uint8_t sensor_mode);
+    bme_err_t get_sensor_mode(uint8_t &sensor_mode);
+    bme_err_t set_sensor_mode(uint8_t sensor_mode);
+    bme_err_t get_sensor_settings(struct bme280_settings& settings);
+    bme_err_t set_sensor_settings(uint8_t desired_settings, const struct bme280_settings& settings);
 
 private:
     uint8_t address_;
@@ -74,6 +74,22 @@ private:
 
     esp_err_t i2c_add_device(uint8_t address, uint32_t scl_hz);
     uint16_t concat_bytes(uint8_t b1, uint8_t b0);
+    bme_err_t get_calib_data();
+    bme_err_t put_device_to_sleep();
+    bme_err_t write_power_mode(uint8_t sensor_mode);
+    void parse_temp_press_calib_data();
+    void parse_humidity_calib_data();
+    void parse_device_settings(std::vector<uint8_t>& reg_data, struct bme280_settings& settings);
+    bme_err_t reload_device_settings(const struct bme280_settings& settings);
+    bme_err_t set_osr_settings(uint8_t desired_settings, const struct bme280_settings& settings);
+    bme_err_t set_osr_humidity_settings(const struct bme280_settings& settings);
+    bme_err_t set_osr_press_temp_settings(uint8_t desired_settings, const struct bme280_settings& settings);
+    bme_err_t set_filter_standby_settings(uint8_t desired_settings, const struct bme280_settings& settings);
+    void fill_filter_settings(uint8_t& reg_data, const struct bme280_settings& settings);
+    void fill_standby_settings(uint8_t& reg_data, const struct bme280_settings& settings);
+    void fill_osr_press_settings(uint8_t& reg_data, const struct bme280_settings& settings);
+    void fill_osr_temp_settings(uint8_t& reg_data, const struct bme280_settings& settings);
+    bool are_settings_changed(uint8_t sub_settings, uint8_t desired_settings);
 
     gpio_num_t trigger_gpio_;
     AppGpioOut trigger_;

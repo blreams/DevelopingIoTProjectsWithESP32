@@ -81,7 +81,6 @@ bme_err_t AppBme280::soft_reset() {
 }
 
 bme_err_t AppBme280::get_calib_data() {
-    const char* tag = "AppBme280::get_calib_data";
     bme_err_t rslt;
     data_.resize(BME280_LEN_TEMP_PRESS_CALIB_DATA);
     rslt = read_reg(BME280_REG_TEMP_PRESS_CALIB_DATA, data_);
@@ -165,4 +164,216 @@ bme_err_t AppBme280::write_reg(const uint8_t reg_addr, const std::vector<uint8_t
         data_.size(),
         -1
     );
+}
+
+bme_err_t AppBme280::get_sensor_mode(uint8_t &sensor_mode) {
+    bme_err_t rslt = {BME280_OK};
+
+    data_.resize(1);
+    rslt = read_reg(BME280_REG_PWR_CTRL, data_);
+    sensor_mode = data_[0];
+    return rslt;
+}
+
+bme_err_t AppBme280::set_sensor_mode(uint8_t sensor_mode) {
+    bme_err_t rslt = {BME280_OK};
+    uint8_t last_sensor_mode;
+
+    data_.resize(1);
+    rslt = get_sensor_mode(last_sensor_mode);
+
+    // if sensor is not in sleep mode, put it to sleep
+    if ((rslt == BME280_OK) && (last_sensor_mode != BME280_POWERMODE_SLEEP)) {
+        rslt = put_device_to_sleep();
+    }
+
+    // set power mode
+    if (rslt == BME280_OK) {
+        rslt = write_power_mode(sensor_mode);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::get_sensor_settings(struct bme280_settings& settings) {
+    bme_err_t rslt = BME280_OK;
+
+    data_.resize(4);
+    rslt = read_reg(BME280_REG_CTRL_HUM, data_);
+
+    if (rslt == BME280_OK) {
+        parse_device_settings(data_, settings);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::set_sensor_settings(uint8_t desired_settings, const struct bme280_settings& settings) {
+    bme_err_t rslt = BME280_OK;
+    uint8_t sensor_mode;
+
+    rslt = get_sensor_mode(sensor_mode);
+
+    if ((rslt == BME280_OK) && (sensor_mode != BME280_POWERMODE_SLEEP)) {
+        rslt = put_device_to_sleep();
+    }
+
+    if (rslt == BME280_OK) {
+        // check if user want to change oversampling
+        if (are_settings_changed(BME280_OVERSAMPLING_SETTINGS, desired_settings)) {
+            rslt = set_osr_settings(desired_settings, settings);
+        }
+
+        // check if user want to change filter and/or standby
+        if ((rslt == BME280_OK) && are_settings_changed(BME280_FILTER_STANDBY_SETTINGS, desired_settings)) {
+            rslt = set_filter_standby_settings(desired_settings, settings);
+        }
+    }
+    return rslt;
+}
+
+void AppBme280::parse_device_settings(std::vector<uint8_t>& reg_data, struct bme280_settings& settings) {
+    settings.osr_h = BME280_GET_BITS_POS_0(reg_data[0], BME280_CTRL_HUM);
+    settings.osr_p = BME280_GET_BITS(reg_data[2], BME280_CTRL_PRESS);
+    settings.osr_t = BME280_GET_BITS(reg_data[2], BME280_CTRL_TEMP);
+    settings.filter = BME280_GET_BITS(reg_data[3], BME280_FILTER);
+    settings.standby_time = BME280_GET_BITS(reg_data[3], BME280_STANDBY);
+}
+
+void AppBme280::fill_filter_settings(uint8_t& reg_data, const struct bme280_settings& settings) {
+    reg_data = BME280_SET_BITS(reg_data, BME280_FILTER, settings.filter);
+}
+
+void AppBme280::fill_standby_settings(uint8_t& reg_data, const struct bme280_settings& settings) {
+    reg_data = BME280_SET_BITS(reg_data, BME280_STANDBY, settings.standby_time);
+}
+
+void AppBme280::fill_osr_press_settings(uint8_t& reg_data, const struct bme280_settings& settings) {
+    reg_data = BME280_SET_BITS(reg_data, BME280_CTRL_PRESS, settings.osr_p);
+}
+
+void AppBme280::fill_osr_temp_settings(uint8_t& reg_data, const struct bme280_settings& settings) {
+    reg_data = BME280_SET_BITS(reg_data, BME280_CTRL_TEMP, settings.osr_t);
+}
+
+bme_err_t AppBme280::set_filter_standby_settings(uint8_t desired_settings, const struct bme280_settings& settings) {
+    bme_err_t rslt = BME280_OK;
+    data_.resize(1);
+    rslt = read_reg(BME280_REG_CONFIG, data_);
+
+    if (rslt == BME280_OK) {
+        if (desired_settings & BME280_SEL_FILTER) {
+            fill_filter_settings(data_[0], settings);
+        }
+
+        if (desired_settings & BME280_SEL_STANDBY) {
+            fill_standby_settings(data_[0], settings);
+        }
+
+        rslt = write_reg(BME280_REG_CONFIG, data_);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::set_osr_settings(uint8_t desired_settings, const struct bme280_settings& settings) {
+    bme_err_t rslt = {BME280_WARN_INVALID_OSR_MACRO};
+
+    if (desired_settings & BME280_SEL_OSR_HUM) {
+        rslt = set_osr_humidity_settings(settings);
+    }
+
+    if (desired_settings & (BME280_SEL_OSR_PRESS | BME280_SEL_OSR_TEMP)) {
+        rslt = set_osr_press_temp_settings(desired_settings, settings);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::set_osr_humidity_settings(const struct bme280_settings& settings) {
+    bme_err_t rslt = BME280_OK;
+    data_.resize(1);
+    data_[0] = settings.osr_h & BME280_CTRL_HUM_MSK;
+    // write the humidity control value
+    rslt = write_reg(BME280_REG_CTRL_HUM, data_);
+
+    // humidity related changes will only be effective after writing to
+    // ctrl_meas reg, read it, then write it back
+    if (rslt == BME280_OK) {
+        rslt = read_reg(BME280_REG_CTRL_MEAS, data_);
+
+        if (rslt == BME280_OK) {
+            rslt = write_reg(BME280_REG_CTRL_MEAS, data_);
+        }
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::set_osr_press_temp_settings(uint8_t desired_settings, const struct bme280_settings& settings) {
+    bme_err_t rslt = BME280_OK;
+
+    data_.resize(1);
+    rslt = read_reg(BME280_REG_CTRL_MEAS, data_);
+
+    if (rslt == BME280_OK) {
+        if (desired_settings & BME280_SEL_OSR_PRESS) {
+            fill_osr_press_settings(data_[0], settings);
+        }
+
+        if (desired_settings & BME280_SEL_OSR_TEMP) {
+            fill_osr_temp_settings(data_[0], settings);
+        }
+
+        rslt = write_reg(BME280_REG_CTRL_MEAS, data_);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::reload_device_settings(const struct bme280_settings& settings) {
+    bme_err_t rslt = {BME280_OK};
+
+    rslt = set_osr_settings(BME280_SEL_ALL_SETTINGS, settings);
+
+    if (rslt == BME280_OK) {
+        rslt = set_filter_standby_settings(BME280_SEL_ALL_SETTINGS, settings);
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::put_device_to_sleep() {
+    bme_err_t rslt = {BME280_OK};
+    bme280_settings settings;
+
+    data_.resize(4);
+    rslt = read_reg(BME280_REG_CTRL_HUM, data_);
+
+    if (rslt == BME280_OK) {
+        parse_device_settings(data_, settings);
+        rslt = soft_reset();
+
+        if (rslt == BME280_OK) {
+            rslt = reload_device_settings(settings);
+        }
+    }
+    return rslt;
+}
+
+bme_err_t AppBme280::write_power_mode(uint8_t sensor_mode) {
+    bme_err_t rslt;
+
+    data_.resize(1);
+    rslt = read_reg(BME280_REG_PWR_CTRL, data_);
+    if (rslt == BME280_OK) {
+        data_[0] = BME280_SET_BITS_POS_0(data_[0], BME280_SENSOR_MODE, sensor_mode);
+        rslt = write_reg(BME280_REG_PWR_CTRL, data_);
+    }
+    return rslt;
+}
+
+bool AppBme280::are_settings_changed(uint8_t sub_settings, uint8_t desired_settings) {
+    bool settings_changed = false;
+
+    if (sub_settings & desired_settings) {
+        // user wants to modify this particular setting
+        settings_changed = true;
+    } else {
+        settings_changed = false;
+    }
+    return settings_changed;
 }

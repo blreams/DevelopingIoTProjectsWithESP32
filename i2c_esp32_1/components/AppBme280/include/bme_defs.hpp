@@ -58,28 +58,31 @@ typedef int bme_err_t;
 #define BME280_ALL                             UINT8_C(0x07)
 
 // settings selection constants
-#define BME280_SEL_OSR_PRESS                      UINT8_C(0x01)
-#define BME280_SEL_OSR_TEMP                       UINT8_C(0x02)
-#define BME280_SEL_OSR_HUM                        UINT8_C(0x04)
-#define BME280_SEL_FILTER                         UINT8_C(0x08)
-#define BME280_SEL_STANDBY                        UINT8_C(0x10)
-#define BME280_SEL_ALL_SETTINGS                   UINT8_C(0x1F)
+#define BME280_SEL_OSR_PRESS                   UINT8_C(0x01)
+#define BME280_SEL_OSR_TEMP                    UINT8_C(0x02)
+#define BME280_SEL_OSR_HUM                     UINT8_C(0x04)
+#define BME280_SEL_FILTER                      UINT8_C(0x08)
+#define BME280_SEL_STANDBY                     UINT8_C(0x10)
+#define BME280_SEL_ALL_SETTINGS                UINT8_C(0x1F)
+
+#define BME280_OVERSAMPLING_SETTINGS           UINT8_C(0x07)
+#define BME280_FILTER_STANDBY_SETTINGS         UINT8_C(0x18)
 
 // oversampling constants
-#define BME280_NO_OVERSAMPLING                    UINT8_C(0x00)
-#define BME280_OVERSAMPLING_1X                    UINT8_C(0x01)
-#define BME280_OVERSAMPLING_2X                    UINT8_C(0x02)
-#define BME280_OVERSAMPLING_4X                    UINT8_C(0x03)
-#define BME280_OVERSAMPLING_8X                    UINT8_C(0x04)
-#define BME280_OVERSAMPLING_16X                   UINT8_C(0x05)
-#define BME280_OVERSAMPLING_MAX                   UINT8_C(16)
+#define BME280_NO_OVERSAMPLING                 UINT8_C(0x00)
+#define BME280_OVERSAMPLING_1X                 UINT8_C(0x01)
+#define BME280_OVERSAMPLING_2X                 UINT8_C(0x02)
+#define BME280_OVERSAMPLING_4X                 UINT8_C(0x03)
+#define BME280_OVERSAMPLING_8X                 UINT8_C(0x04)
+#define BME280_OVERSAMPLING_16X                UINT8_C(0x05)
+#define BME280_OVERSAMPLING_MAX                UINT8_C(16)
 
-#define BME280_CTRL_HUM_MSK                       UINT8_C(0x07)
-#define BME280_CTRL_HUM_POS                       UINT8_C(0x00)
-#define BME280_CTRL_PRESS_MSK                     UINT8_C(0x1C)
-#define BME280_CTRL_PRESS_POS                     UINT8_C(0x02)
-#define BME280_CTRL_TEMP_MSK                      UINT8_C(0xE0)
-#define BME280_CTRL_TEMP_POS                      UINT8_C(0x05)
+#define BME280_CTRL_HUM_MSK                    UINT8_C(0x07)
+#define BME280_CTRL_HUM_POS                    UINT8_C(0x00)
+#define BME280_CTRL_PRESS_MSK                  UINT8_C(0x1C)
+#define BME280_CTRL_PRESS_POS                  UINT8_C(0x02)
+#define BME280_CTRL_TEMP_MSK                   UINT8_C(0xE0)
+#define BME280_CTRL_TEMP_POS                   UINT8_C(0x05)
 
 // measurement delay constants
 #define BME280_MEAS_OFFSET                     UINT16_C(1250)
@@ -165,7 +168,7 @@ struct bme280_uncomp_data {
     uint32_t pressure;
     uint32_t temperature;
     uint32_t humidity;
-}
+};
 
 struct bme280_settings {
     uint8_t osr_p;
@@ -178,5 +181,5 @@ struct bme280_settings {
 struct bme280_dev {
     uint8_t chip_id;
     int8_t intf_rslt = 0;
-    struct bme280_calib_data calib_data;
+    struct bme280_calibration_data_t calib_data;
 };
