@@ -5,6 +5,7 @@ bme280_init
 bme280_soft_reset
 get_calib_data
 write_power_mode
+parse_sensor_data
 parse_temp_press_calib_data
 parse_humidity_calib_data
 parse_device_settings
@@ -23,17 +24,12 @@ fill_osr_temp_settings
 fill_filter_settings
 fill_standby_settings
 are_settings_changed
-
-
-parse_sensor_data
 compensate_pressure
 compensate_humidity
 compensate_temperature
+bme280_get_sensor_data
+bme280_compensate_data
 bme280_cal_meas_delay
 
-bme280_get_sensor_data
-  Call: bme280_get_regs, parse_sensor_data, bme280_compensate_data
 
-bme280_compensate_data
-  Call: compensate_temperature, compensate_pressure, compensate_humidity
 

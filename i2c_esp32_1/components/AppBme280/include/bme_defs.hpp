@@ -158,6 +158,14 @@ struct bme280_calibration_data_t {
     int32_t t_fine = 0;
 };
 
+struct bme280_settings_t {
+    uint8_t osr_p = 0;
+    uint8_t osr_t = 0;
+    uint8_t osr_h = 0;
+    uint8_t filter = 0;
+    uint8_t standby_time = 0;
+};
+
 struct bme280_data {
     double pressure;
     double temperature;
@@ -168,14 +176,6 @@ struct bme280_uncomp_data {
     uint32_t pressure;
     uint32_t temperature;
     uint32_t humidity;
-};
-
-struct bme280_settings {
-    uint8_t osr_p;
-    uint8_t osr_t;
-    uint8_t osr_h;
-    uint8_t filter;
-    uint8_t standby_time;
 };
 
 struct bme280_dev {
