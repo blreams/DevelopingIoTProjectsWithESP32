@@ -62,6 +62,9 @@ extern "C" {
         ESP_ERROR_CHECK(bme.init(i2c_bus_handle));
         bme.start();
 
+        // preliminary setup
+        bme.get_sensor_settings();
+
         xSemaphoreGive(sensor_init_done);
         vTaskDelete(nullptr);
     }
@@ -76,10 +79,35 @@ extern "C" {
     };
 
     void vGetTempTask(void* pvParameters) {
+        const char* tag = "vGetTempTask";
         xSemaphoreTake(sensor_init_done, portMAX_DELAY);
 
         // TODO: This is where we add code to read the sensor values
+        bme.settings.filter = BME280_FILTER_COEFF_2;
+        bme.settings.osr_h = BME280_OVERSAMPLING_1X;
+        bme.settings.osr_p = BME280_OVERSAMPLING_1X;
+        bme.settings.osr_t = BME280_OVERSAMPLING_1X;
+        bme.settings.standby_time = BME280_STANDBY_TIME_0_5_MS;
+        bme.set_sensor_settings(BME280_ALL);
+        bme.set_sensor_mode(BME280_POWERMODE_NORMAL);
+        uint32_t max_delay_us;
+        bme.cal_meas_delay(max_delay_us);
+        ESP_LOGD(tag, "max_delay=%lu (us)", max_delay_us);
+        uint32_t tick_delay_ms = max_delay_us / 1000;
+        vTaskDelay(pdMS_TO_TICKS(tick_delay_ms));
+        std::vector<uint8_t> val(1, 0x00);
+        bme.read_reg(BME280_REG_STATUS, val);
+        uint8_t sensor_comp = {BME280_ALL};
+        bme280_data comp_data;
+        bme.get_sensor_data(sensor_comp, comp_data);
+        ESP_LOGD(tag, "temperature=%f", comp_data.temperature);
         while (true) {
+            bme.read_reg(BME280_REG_STATUS, val);
+            if (val[0] & BME280_STATUS_MEAS_DONE) {
+                vTaskDelay(pdMS_TO_TICKS(tick_delay_ms));
+                bme.get_sensor_data(sensor_comp, comp_data);
+                ESP_LOGD(tag, "temperature=%f, pressure=%f, humidity=%f", comp_data.temperature, comp_data.pressure, comp_data.humidity);
+            }
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
     };

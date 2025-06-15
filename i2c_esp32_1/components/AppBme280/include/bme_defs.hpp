@@ -1,5 +1,6 @@
 #pragma once
 
+#define DEBUG 1
 
 // Definitions for success/error/warning constants
 #define BME280_OK                              0
@@ -135,6 +136,11 @@ typedef int bme_err_t;
                                                    (bitname##_POS))
 #define BME280_GET_BITS_POS_0(reg_data, bitname)  (reg_data & (bitname##_MSK))
 
+#ifdef DEBUG
+#define LOG_DEBUG_STRINGS(s) ESP_LOGD((s).c_str(), "%s", "Called")
+#else
+#define LOG_DEBUG_STRINGS(s) ((void) 0) 
+#endif
 
 struct bme280_calibration_data_t {
     uint16_t dig_t1 = 0;
@@ -166,16 +172,16 @@ struct bme280_settings_t {
     uint8_t standby_time = 0;
 };
 
+struct bme280_uncomp_data_t {
+    uint32_t pressure = 0;
+    uint32_t temperature = 0;
+    uint32_t humidity = 0;
+};
+
 struct bme280_data {
     double pressure;
     double temperature;
     double humidity;
-};
-
-struct bme280_uncomp_data {
-    uint32_t pressure;
-    uint32_t temperature;
-    uint32_t humidity;
 };
 
 struct bme280_dev {

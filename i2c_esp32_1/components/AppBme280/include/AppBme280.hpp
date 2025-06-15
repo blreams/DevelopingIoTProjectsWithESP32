@@ -43,6 +43,8 @@ public:
         read_data - <ref> this is where the read data is returned.
     The user is required to size the read_data vector to the number of bytes being
     read. Any values in the vector are overwritten.
+
+    NOTE: it is common to use the private member data_ as read_data when calling.
     */
     bme_err_t read_reg(const uint8_t reg_addr, std::vector<uint8_t>& read_data);
 
@@ -53,6 +55,8 @@ public:
         write_data - <ref> this is where the write data is stored.
     The user is required to initialize the write_data vector with the bytes to be
     written.
+
+    NOTE: it is recommended to create a new std::vector for write_data when calling.
     */
     bme_err_t write_reg(const uint8_t reg_addr, const std::vector<uint8_t>& write_data);
 
@@ -116,6 +120,9 @@ public:
     */
     bme_err_t cal_meas_delay(uint32_t& max_delay);
 
+    bme280_settings_t settings;
+    std::string stag;
+
 private:
     uint8_t address_;
     uint32_t speed_;
@@ -125,7 +132,7 @@ private:
     std::vector<uint8_t> data_;
     float scl_period_;
     bme280_calibration_data_t calib_data_;
-    bme280_settings_t settings_;
+    bme280_uncomp_data_t uncomp_data_;
 
     gpio_num_t trigger_gpio_;
     AppGpioOut trigger_;
@@ -140,14 +147,14 @@ private:
     bme_err_t set_osr_humidity_settings();
     bme_err_t set_osr_press_temp_settings(uint8_t desired_settings);
     bme_err_t set_filter_standby_settings(uint8_t desired_settings);
-    bme_err_t compensate_data(uint8_t sensor_comp, const struct bme280_uncomp_data& uncomp_data, struct bme280_data& comp_data);
-    double compensate_temperature(const struct bme280_uncomp_data& uncomp_data);
-    double compensate_pressure(const struct bme280_uncomp_data& uncomp_data);
-    double compensate_humidity(const struct bme280_uncomp_data& uncomp_data);
+    bme_err_t compensate_data(uint8_t sensor_comp, struct bme280_data& comp_data);
+    double compensate_temperature();
+    double compensate_pressure();
+    double compensate_humidity();
     void parse_temp_press_calib_data();
     void parse_humidity_calib_data();
     void parse_device_settings(std::vector<uint8_t>& reg_data);
-    void parse_sensor_data(std::vector<uint8_t>& reg_data, struct bme280_uncomp_data& uncomp_data);
+    void parse_sensor_data(std::vector<uint8_t>& reg_data);
     void fill_filter_settings(uint8_t& reg_data);
     void fill_standby_settings(uint8_t& reg_data);
     void fill_osr_press_settings(uint8_t& reg_data);
