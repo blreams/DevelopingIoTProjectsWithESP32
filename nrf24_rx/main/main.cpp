@@ -17,6 +17,7 @@ struct __attribute__((packed)) PacketData {
     double average_distance;
     bool in_range;
     int id;
+    int index;
 };
 
 extern "C" {
@@ -65,16 +66,22 @@ void receiver(void* pvParameters) {
     // get received data as it becomes available
     std::string s;
     struct PacketData packet;
+    uint32_t ms = 0;
+    uint32_t last_ms = 0;
     while (true) {
+        ms = pdTICKS_TO_MS(xTaskGetTickCount());
         // wait for received data
         if (Nrf24_dataReady(&dev)) {
             Nrf24_getData(&dev, buf);
             memcpy(&packet, buf, sizeof(packet));
-            ESP_LOGI(tag, "id: %d, distance: %f, average_distance: %f, in_range: %s",
-                packet.id, packet.distance, packet.average_distance, packet.in_range ? "true" : "false"
+            ESP_LOGI(tag, "id: %d, idx: %d, distance: %f, average_distance: %f, in_range: %s",
+                packet.id, packet.index, packet.distance, packet.average_distance, packet.in_range ? "true" : "false"
             );
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        if ((ms - last_ms) > 100) {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            last_ms = pdTICKS_TO_MS(xTaskGetTickCount());
+        }
     }
 };
 

@@ -223,8 +223,8 @@ extern bool Nrf24_dataReady(NRF24_t * dev)
 	}
 	// We can short circuit on RX_DR, but if it's not set, we still need
 	// to check the FIFO for any pending packets
-	//return !Nrf24_rxFifoEmpty(dev);
-	return 0;
+	return !Nrf24_rxFifoEmpty(dev);
+	//return 0;
 }
 
 // Get pipe number for reading
